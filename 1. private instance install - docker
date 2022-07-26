@@ -1,0 +1,107 @@
+# Docker는 리눅스 배포판 종류를 자동으로 인식하여 도커 패지키를 설치해주는 스크립트를 제공하는데 이걸 이용해서 설치
+# -qO : O는 대문자 O
+$ sudo wget -qO- https://get.docker.com/ | sh
+ 
+# Docker를 실행할 때 마다 root 혹은 sudo를 붙여서 실행해야하는데 sudo를 붙이지 않고 로그인 되어있는 사용자로 이용하려면 아래의 명령어를 실행시켜 주면 됨
+# User 확인
+$ echo $USER
+sasuh
+ 
+# group=docker, user=sasuh 추가
+$ sudo usermod -aG docker ${sasuh}
+ 
+# Docker 재시작
+$ sudo systemctl restart docker
+또는
+$ sudo service docker restart
+
+
+# 사용자 계정 로그아웃 했다가 다시 로그인 필요
+$ su -
+$ su sasuh -
+ 
+# Docker 설치 확인
+$ docker run hello-world
+# 에러 발생
+Get https://registry-1.docker.io/v2/: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
+ 
+# proxy 설정(root 권한으로 실행)
+$ vi /etc/systemd/system/docker.service.d/http-proxy.conf
+[Service]
+Environment="HTTP_PROXY=http://proxyHost:proxyPort"
+Environment="HTTPS_PROXY=http://proxyHost:proxyPort"
+Environment="NO_PROXY=localhost,127.0.0.1"
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl show --property Environment docker
+$ sudo systemctl restart docker
+ 
+$ vi /etc/default/docker
+export http_proxy="http://proxyHost:proxyPort"
+export https_proxy="http://proxyHost:proxyPort"
+ 
+$ sudo systemctl restart docker
+ 
+# 명령어 실행 후 아래와 같은 메세지가 보인다면 docker 정상적으로 사용 가능
+$ docker run hello-world
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+ 
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+ 
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+ 
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+
+
+# WebPageTest는 Server와 Agent로 나누어져 있음
+# Server 설치
+$ docker pull webpagetest/server
+
+# Agent 설치
+$ docker pull webpagetest/agent
+
+# Docker Container 실행( 실행 순서 : Server ->> Agent )
+# WPT Server Container 실행
+# -d : backgroud 모드로 실행(생략 가능 / 생략할 경우 표준 출력 확인 가능)
+# -p : <HOST-PORT>:<CONTAINER-PORT>
+# --rm : Docker를 종료할 때 컨테이너가 자동으로 제거되도록 함
+ 
+$ docker run -d -p 80:80 --name server --rm webpagetest/server
+ 
+# cannot allocate memory라는 에러를 test.log에서 확인 가능한 상황이라면 아래의 명령어로 실행(Host Mount)
+# Host Mount : docker의 파일을 host에도 저장하는 것(해당 container가 종료되면 저장되어 있던 파일이 모두 삭제되어도[--rm 옵션] host에는 남아있도록 해줌)
+# volume default dir : /var/lib/docker/volumes
+$ docker run -d -p 80:80 -v docker_results:/var/www/html/results --name server --rm webpagetest/server
+ 
+# WPT Agent Container 실행
+# SERVER_URL을 지정하지 않으면 Agent 구동시 에러 발생
+# Server Container 구동시 4000번이 아닌 다른 번호로 포트를 지정했다면 아래 SERVER_URL의 포트도 변경해줘야함
+# LOCATION=Location_ID
+# Location이 Test인 agent 실행
+
+$ docker run -d \
+-e "SERVER_URL=http://<WPT_SERVER_HOST>:80/work/" \
+-e "LOCATION=Test" \
+-e "SHAPER=none" \
+--cap-add NET_ADMIN \
+--init \
+--name="agent" \
+--rm webpagetest/agent
+ 
+# 설치를 다 하고 나면 로컬 브라우저에서
+# http://<SERVER_HOST>:<SERVER_PORT>/install -->> WPT Private Instance install 확인 가능
+# http://<SERVER_HOST>:<SERVER_PORT> -->> WPT Private Instance 확인 O
+
