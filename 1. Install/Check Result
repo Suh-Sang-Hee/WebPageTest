@@ -1,0 +1,44 @@
+# 브라우저에서 테스트 후 url 확인해보면 결과 파일의 위치를 알 수 있음
+172.30.5.179/results/191023_7P_a120fffdf6cda5870a93a5b4124e070a/
+
+# server가 실행되고 있는 컨테이너에 들어가면 확인 가능
+$ docker exec -it server /bin/bash
+ 
+$ pwd
+/var/www/html/results/19/10/23/7P/a120fffdf6cda5870a93a5b4124e070a/
+
+$ ls -al
+total 304
+drwxrwxrwx 3 www-data www-data   4096 Oct 23 01:28 .
+drwxrwxrwx 3 www-data www-data   4096 Oct 23 00:48 ..
+-rw-rw-rw- 1 www-data www-data 	73 Oct 23 00:48 1.0.analysis.json.gz
+-rw-rw-rw- 1 www-data www-data   7395 Oct 23 00:48 1.0.histograms.json.gz
+-rw-rw-rw- 1 www-data www-data   3508 Oct 23 00:48 1.0.pageData.9.gz
+-rw-rw-rw- 1 www-data www-data  64994 Oct 23 00:48 1_devtools_requests.json.gz
+-rw-rw-rw- 1 www-data www-data   1645 Oct 23 00:48 1_feature_usage.json.gz
+-rw-rw-rw- 1 www-data www-data 	61 Oct 23 00:48 1_interactive.json.gz
+-rw-rw-rw- 1 www-data www-data	604 Oct 23 00:48 1_page_data.json.gz
+-rw-rw-rw- 1 www-data www-data	686 Oct 23 00:48 1_progress.csv.gz
+-rw-rw-rw- 1 www-data www-data  15813 Oct 23 00:48 1_screen.jpg
+-rw-rw-rw- 1 www-data www-data   2311 Oct 23 00:48 1_script_timing.json.gz
+-rw-rw-rw- 1 www-data www-data 	42 Oct 23 00:48 1_timed_events.json.gz
+-rw-rw-rw- 1 www-data www-data   3869 Oct 23 00:48 1_timeline_cpu.json.gz
+-rw-rw-rw- 1 www-data www-data 132780 Oct 23 00:48 1_trace.json.gz
+-rw-rw-rw- 1 www-data www-data   4908 Oct 23 00:48 1_user_timing.json.gz
+-rw-rw-rw- 1 www-data www-data	185 Oct 23 00:48 1_v8stats.json.gz
+-rw-rw-rw- 1 www-data www-data	196 Oct 23 00:48 1_visual_progress.json.gz
+-rw-rw-rw- 1 www-data www-data	266 Oct 23 00:48 breakdown4.json.gz
+-rw-rw-rw- 1 www-data www-data	271 Oct 23 00:48 test.job
+-rw-rw-rw- 1 www-data www-data	549 Oct 23 00:48 test.log
+-rw-rw-rw- 1 www-data www-data	408 Oct 23 01:28 testinfo.ini
+-rw-rw-rw- 1 www-data www-data	880 Oct 23 00:48 testinfo.json.gz
+drwxrwxrwx 2 www-data www-data   4096 Oct 23 00:48 video_1
+ 
+# 컨테이너 밖으로 나오기
+$ exit
+
+# docker의 컨테이너 밖에서 해당 파일을 보기 위해서 cp 필요
+$ docker cp server:/var/www/html/results/19/10/23/7P/a120fffdf6cda5870a93a5b4124e070a/1.0.pageData.9.gz ./
+ 
+# .gz 형식으로 불러오기 때문에 압축 해제 후 vi로 파일 확인 가능
+$ gzip -d 1.0.pageData.9.gz
