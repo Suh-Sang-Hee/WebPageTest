@@ -6,7 +6,7 @@ if 'Firefox' in browsers:
         try:
             # make sure marionette is up to date
             from internal.os_util import run_elevated
-            run_elevated(sys.executable, '-m pip install --proxy {Change Proxy} --upgrade marionette_driver')
-            run_elevated(sys.executable, '-m pip install --proxy {Change Proxy} \'mozrunner==7.4.0\' --force-reinstall')
+            run_elevated(sys.executable, '-m pip install --proxy {http://proxyHost:proxyPort} --upgrade marionette_driver')
+            run_elevated(sys.executable, '-m pip install --proxy {http://proxyHost:proxyPort} \'mozrunner==7.4.0\' --force-reinstall')
         except Exception:
             pass
