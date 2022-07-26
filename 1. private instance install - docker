@@ -105,3 +105,37 @@ $ docker run -d \
 # http://<SERVER_HOST>:<SERVER_PORT>/install -->> WPT Private Instance install 확인 가능
 # http://<SERVER_HOST>:<SERVER_PORT> -->> WPT Private Instance 확인 O
 
+# Docker Container 시간 설정
+$ tzselect
+/usr/bin/tzselect: line 53: /usr/share/zoneinfo/iso3166.tab: No such file or directory
+/usr/bin/tzselect: time zone files are not set up correctly
+ 
+$ apt-get install tzdata
+Asia, Seoul 선택
+ 
+$ vi /root/.profile
+TZ='Asia/Seoul';
+export TZ
+ 
+$ date  # KST가 포함되어 있으면 시간 설정 완료
+
+# Docker Root dir 변경
+$ sudo systemctl status docker
+ docker.service - Docker Application Container Engine
+   Loaded: loaded (/lib/systemd/system/docker.service; enabled; vendor preset: enabled) 	# /lib/systemd/system/docker.service : 수정해야 할 스크립트(경로 확인 필요)
+ 
+$ sudo vi /lib/systemd/system/docker.service
+# 수정 전
+-->> ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+ 
+# 수정 후
+-->> ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --data-root=/home/sasuh/docker_files
+ 
+$ sudo systemctl daemon-reload
+$ sudo systemctl stop docker
+$ cp -rp /var/lib/docker /home/
+$ sudo systemctl start docker
+ 
+$ docker info | grep "Docker Root Dir"
+ 
+$ docker volume inspect {Volume_Name}
