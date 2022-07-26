@@ -1,0 +1,57 @@
+# "First View: Test Error: Error Configuring traffic-shaping"
+# Agent Container 안에는 proxy 설정이 안되어 있기 때문에 entrypoint.sh 파일 수정 필요
+
+$ docker run -d -e "SERVER_URL=http://<SERVER_HOST>:80/work/" -e "LOCATION=Test" -e "SHAPER=none" --cap-add=NET_ADMIN --init --name="agent" --rm webpagetest/agent
+ 
+$ docker exec -it agent /bin/bash
+ 
+$ apt -y install vim
+ 
+$ vi entrypoint.sh
+ 
+#!/bin/bash
+set -e
+ 
+if [ -z "$LOCATION" ]; then
+  echo >&2 'LOCATION not set'
+  exit 1
+fi
+ 
+if [ -z "$EXTRA_ARGS" ]; then
+  EXTRA_ARGS=""
+
+fi
+ 
+if [ -n "$NAME" ]; then
+  EXTRA_ARGS="$EXTRA_ARGS --name $NAME"
+fi
+ 
+if [ -n "$KEY" ]; then
+  EXTRA_ARGS="$EXTRA_ARGS --key $KEY"
+fi
+ 
+if [ -n "$SHAPER" ]; then
+  EXTRA_ARGS="$EXTRA_ARGS --shaper $SHAPER"
+fi
+ 
+# exec replaces the shell process by the python process and is required to
+# propagate signals (i.e. SIGTERM)
+export http_proxy="http://proxyHost:proxyPort"
+export https_proxy="http://proxyHost:proxyPort"
+ 
+#exec python /wptagent/wptagent.py --server "${SERVER_URL}" --location "${LOCATION}" ${EXTRA_ARGS} --xvfb --dockerized
+exec python /wptagent/wptagent.py --server "http://172.30.5.179:80/work/" --location "${LOCATION}" --init --rm --xvfb --dockerized
+ 
+$ docker commit agent local-wptagent
+ 
+$ docker images
+REPOSITORY       	TAG             	IMAGE ID        	CREATED         	SIZE
+local-wptagent   	latest          	fab7afe7e7d9    	15 minutes ago  	3.25GB
+webpagetest/agent	latest          	a20ce7172019    	9 hours ago     	3.22GB
+webpagetest/server   latest          	37ec6cfa7e93    	4 days ago      	1.11GB
+ 
+$ docker stop server agent
+ 
+$ docker run -d -p 80:80 --name server --rm webpagetest/server
+$ docker run -d -e "LOCATION=Test" -e "SHAPER=none" --cap-add
+NET_ADMIN --name agent local-wptagent
