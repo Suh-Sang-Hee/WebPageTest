@@ -1,0 +1,84 @@
+ # 5-1. Confluent CLI
+# confluent CLI 실행 순서 : confluent local start → confluent local load elasticsearch-sink → 값 입력
+# Elasticsearch connector를 실행하기 전에 config 파일 수정
+# vi etc/kafka-connect-elasticsearch/quickstart-elasticsearch.properties
+ 
+name=elasticsearch-sink
+connector.class=io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
+tasks.max=1
+topics=test-elasticsearch-sink
+key.ignore=true
+connection.url=http://localhost:9200    	# 수정 필요 connection.url=http://<ES-Host>:9200
+type.name=kafka-connect
+ 
+# 현재 Load된 connector 없음
+$ confluent local status connectors
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+ 
+[]
+ 
+# connector 확인
+$ confluent local list connectors
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+ 
+Bundled Predefined Connectors (edit configuration under etc/):
+  elasticsearch-sink
+  file-source
+  file-sink
+  jdbc-source
+  jdbc-sink
+  hdfs-sink
+  s3-sink
+ 
+# elasticsearch-sink Load
+$ confluent local load elasticsearch-sink
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+
+{"name":"elasticsearch-sink","config":{"connector.class":"io.confluent.connect.elasticsearch.ElasticsearchSinkConnector","tasks.max":"1","topics":"test-elasticsearch-sink","key.ignore":"true","connection.url":"htpp://<ES-Host>:9200",
+"type.name":"kafka-connect","name":"elasticsearch-sink"},"tasks":[],"type":"sink"}
+ 
+# elasticsearch-sink Load 확인
+$ confluent local status connectors
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+ 
+["elasticsearch-sink"]
+ 
+# elasticsearch-sink를 내리고 싶다면 unload 이용
+$ confluent local unload elasticsearch-sink
+ 
+# elasticsearch-sink를 load 할 때 config 파일 지정 가능(-- -d 이용)
+$ confluent load elasticsearch-sink -- -d <CONFLUENT_HOME>/etc/kafka-connect-elasticsearch/quickstart-elasticsearch.properties
+ 
+$bin/kafka-avro-console-producer --broker-list localhost:9092 --topic test-elasticsearch-sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+{"f1" : "a"}
+
+# 5-2. non Confluent CLI
+# non confluent CLI 실행 순서 : zookeeper → kafka → schema-registry → connect-standalone → 값 입력
+
+# Elasticsearch connector : Avro console producer에 의해서 생성되는 data를 ES로 전달하기 위해서 사용
+# Avro console producer : 입력되는 데이터를 읽어서 avro format에 맞춰서 kafka topic에 저장하기 위한 producer command line
+
+# Avro : https://www.confluent.io/blog/avro-kafka-data/
+ 
+# Elasticsearch connector를 실행하기 전에 config 파일 수정
+# vi etc/kafka-connect-elasticsearch/quickstart-elasticsearch.properties
+ 
+name=elasticsearch-sink
+connector.class=io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
+tasks.max=1
+topics=test-elasticsearch-sink
+key.ignore=true
+connection.url=http://localhost:9200    	# 수정 필요 connection.url=http://<ES-Host>:9200
+type.name=kafka-connect
+ 
+ 
+# non Confluent CLI인 경우에는 아래의 명령어를 실행해줘야 kafka에서 ES로 데이터를 보낼 수 있다.
+$ bin/connect-standalone etc/schema-registry/connect-avro-standalone.properties etc/kafka-connect-elasticsearch/quickstart-elasticsearch.properties
+ 
+# consumer에 데이터 추가하기
+$ <CONFLUENT_HOME>/bin/kafka-avro-console-producer --broker-list localhost:9092 --topic test-elasticsearch-sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+{"f1" : "a"}
