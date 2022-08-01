@@ -7,22 +7,20 @@ from datetime import datetime
 from ua_parser import user_agent_parser
 from pytz import timezone
 import xmltodict
-
 import json
 import gzip
 import uuid
 import os, sys
  
  
-## 함수 정의
-# cur_date2 : docker cp할 때 필요한 날짜(UTC 기준)
+# Define Functions
+# cur_date2 : Date using for docker cp (UTC)
 def make_utc_date():
     cur_date2 = datetime.utcnow()
     cur_date2 = cur_date2.strftime('%y/%m/%d/')
      
     return cur_date2
      
-# test_url_list 함수
 def get_test_url_list(test_dir):
     test_url_list = []
     with open('{}urls2.txt' .format(test_dir)) as f:
@@ -32,7 +30,6 @@ def get_test_url_list(test_dir):
             test_url_list = sorted(test_url_list)
     return test_url_list
  
-# file_list 함수
 def get_file_list(result_dir, file_format):
     file_list = []
     for file in glob('{}*.{}' .format(result_dir, file_format)):
@@ -48,7 +45,7 @@ def xml_to_json(test_url_list, xml_file_list, result_dir):
             xml_string = f1.read()
          
         json_string = json.dumps(xmltodict.parse(xml_string), indent=4)
-        # json 파일로 저장 /home/sasuh/test/result/1912261025/www.gmarket.co.kr.json
+        # Save json file : /home/sasuh/test/result/1912261025/www.gmarket.co.kr.json
         with open('{}.json' .format(result_dir + test_url_list[num]), 'w') as f2:
             f2.write(json_string)
                          
@@ -82,18 +79,18 @@ def upper_to_lower(all_dict, test_name, value):
         all_dict[test_name] = value
     return all_dict
  
-# site speed msg
+# Create site speed msg
 def make_ssm(gz_file_list, json_file_list, test_url_list, 
 result_dir):
     for i in range(len(gz_file_list)):
-                # 1. jsonData1 = 1_devtools_requests.json.gz
+        # 1. jsonData1 = 1_devtools_requests.json.gz
         with gzip.open(gz_file_list[i], 'rb')  as f:
             content = f.read()
  
         content = content.decode('utf-8')
         jsonData1 = json.loads(content)
  
-                # 2. jsonData2 = www.auction.co.kr.json
+        # 2. jsonData2 = www.auction.co.kr.json
         with open(json_file_list[i]) as f:
             jsonData2 = json.load(f)
  
@@ -138,8 +135,9 @@ result_dir):
         all_dict = dict()
         #all_dict = {'service_id' : serviceId, 'message_id' : messageId, 'test_url' : testUrl, 'device_type' : deviceType, 'connect_type' : connectType, 'ip' : ip, 'date' : date, 'time_stamp' : timeStamp, 'user_agent' : userAgent}
         all_dict = {'service_id' : serviceId, 'message_id' : messageId, 'test_url' : testUrl, 'device_type' : deviceType, 'connect_type' : connectType, 'ip' : ip, 'utc_date' : UTC_date, 'kat_date' : KST_date, 'time_stamp' : timeStamp}
-                # data parsing
-                # 1. 대문자 -> 소문자
+        
+        # Data parsing
+        # 1. upper -> lower
         metricList = ['TTFB', 'cached','render', 'requests', 'server_rtt', 'responses_200', 'responses_404', 'responses_other', 'result', 'bytesIn', 'bytesOut',
         'loadTime', 'domTime', 'effectiveBps', 'requestsDoc', 'visualComplete', 'firstPaint', 'firstContentfulPaint', 'firstMeaningfulPaint', 'fullyLoaded']
  
@@ -148,7 +146,7 @@ result_dir):
                 value = int(float(fv[metric]))
                 upper_to_lower(all_dict, metric, value)
  
-        # 2. chromeUserTiming -> cut_ && 대문자 -> 소문자
+        # 2. chromeUserTiming -> cut_ && upper -> lower
         for key in fv.keys():
             if 'chromeUserTiming.' in key:
                 value = int(float(fv[key]))
@@ -166,9 +164,9 @@ result_dir):
         with open('{}.SSM.json' .format(result_dir + test_url_list[i]), 'w', encoding='utf-8') as makeFile:
             json.dump(siteSpeedMessage, makeFile, indent='\t', sort_keys = True)
             
-# 정의한 함수 실행
+# Execute All Functions
 if __name__ == "__main__":
-    # cur_date1, cur_date2 정의
+    # cur_date1, cur_date2
     cur_date1 = sys.argv[1]     # sys.argv[0] = python_file_name
      
     cur_date2 = make_utc_date()
@@ -177,10 +175,10 @@ if __name__ == "__main__":
  
     test_dir = '/home/sasuh/wpt_test/'
  
-    # 2. test_url 불러오기
+    # 2. Get test_url List
     test_url_list = get_test_url_list(test_dir)
  
-    # 3. xml_file_list 불러오기
+    # 3. Get xml_file_list
     xml_file_list = get_file_list(result_dir, 'xml')
  
     # 4. xml -> json
@@ -189,7 +187,7 @@ if __name__ == "__main__":
     # 5. docker cp
     cp_file(xml_file_list, result_dir, cur_date2, test_url_list)
  
-    # 6. gz_file_list & json_file_list(file parsing에 필요)
+    # 6. gz_file_list & json_file_list (using for file parsing)
     gz_file_list = get_file_list(result_dir, 'gz')
     json_file_list = get_file_list(result_dir, 'json')
  
