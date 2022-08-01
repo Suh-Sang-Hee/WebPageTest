@@ -1,0 +1,76 @@
+# 4-1. Confluent CLI
+# 전체 실행(zookeeper, kafka, schema-registry, connect, ksql-server, control-center)
+$ confluent local start
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+ 
+Using CONFLUENT_CURRENT: /tmp/confluent.Z4he547M
+Starting zookeeper
+zookeeper is [UP]
+Starting kafka
+kafka is [UP]
+Starting schema-registry
+schema-registry is [UP]
+Starting kafka-rest
+kafka-rest is [UP]
+Starting connect
+connect is [UP]
+Starting ksql-server
+ksql-server is [UP]
+Starting control-center
+control-center is [UP]
+ 
+$ jps
+17281 SupportedKafka
+17169 QuorumPeerMain
+18066 ConnectDistributed
+17858 KafkaRestMain
+17606 SchemaRegistryMain
+19929 Jps
+18970 ControlCenter
+18699 KsqlServerMain
+$ confluent local status
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+ 
+control-center is [UP]
+ksql-server is [UP]
+connect is [UP]
+kafka-rest is [UP]
+schema-registry is [UP]
+kafka is [UP]
+zookeeper is [UP]
+ 
+# kafka만 실행하고 싶다면
+$ confluent local start kafka
+    The local commands are intended for a single-node development environment
+    only, NOT for production usage. https://docs.confluent.io/current/cli/index.html
+ 
+Using CONFLUENT_CURRENT: /tmp/confluent.Z4he547M
+Starting zookeeper
+zookeeper is [UP]
+Starting kafka
+kafka is [UP]
+
+
+# 4-2. non Confluent CLI
+# 실행 파일 위치 : $CONFLUENT_HOME/bin
+# config 파일 위치 : $CONFLUENT_HOME/etc
+ 
+# 실행 순서 : zookeeper -> kafka
+$ bin/zookeeper-server-start -daemon etc/kafka/zookeeper.properties
+$ bin/kafka-server-start -daemon etc/kafka/server.properties
+ 
+$ jps
+1330 QuorumPeerMain
+1384 SupportedKafka
+1403 Jps
+# zookeeper : 9092 (default port)
+# kafka : 2181(default port)
+$ sudo lsof -i -P -n | grep LISTEN
+sshd  	1055         	root	3u  IPv4  19476  	0t0  TCP *:22 (LISTEN)
+sshd  	1055         	root	4u  IPv6  19478  	0t0  TCP *:22 (LISTEN)
+java  	1330        	sasuh  305u  IPv6  20261  	0t0  TCP *:26739 (LISTEN)
+java  	1330        	sasuh  317u  IPv6  20266  	0t0  TCP *:2181 (LISTEN)
+java  	1384        	sasuh  305u  IPv6  20745  	0t0  TCP *:29951 (LISTEN)
+java  	1384        	sasuh  322u  IPv6  20304  	0t0  TCP *:9092 (LISTEN)
