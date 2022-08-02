@@ -164,9 +164,9 @@ result_dir):
         with open('{}.SSM.json' .format(result_dir + test_url_list[i]), 'w', encoding='utf-8') as makeFile:
             json.dump(siteSpeedMessage, makeFile, indent='\t', sort_keys = True)
             
-# Execute All Functions
-if __name__ == "__main__":
-    # cur_date1, cur_date2
+# Define All Functions
+def main():
+    # cur_date1, cur_date2 정의
     cur_date1 = sys.argv[1]     # sys.argv[0] = python_file_name
      
     cur_date2 = make_utc_date()
@@ -175,7 +175,7 @@ if __name__ == "__main__":
  
     test_dir = '/home/sasuh/wpt_test/'
  
-    # 2. Get test_url List
+    # 2. Get test_url
     test_url_list = get_test_url_list(test_dir)
  
     # 3. Get xml_file_list
@@ -184,12 +184,16 @@ if __name__ == "__main__":
     # 4. xml -> json
     xml_to_json(test_url_list, xml_file_list, result_dir)
  
-    # 5. docker cp
+    # 5. Docker cp
     cp_file(xml_file_list, result_dir, cur_date2, test_url_list)
  
-    # 6. gz_file_list & json_file_list (using for file parsing)
+    # 6. gz_file_list & json_file_list(for file parsing)
     gz_file_list = get_file_list(result_dir, 'gz')
     json_file_list = get_file_list(result_dir, 'json')
  
-    # 7. Site Speed Message
+    # 7. Create Site Speed Message
     make_ssm(gz_file_list, json_file_list, test_url_list, result_dir)
+ 
+# Execute All
+if __name__ == "__main__":
+    main()
